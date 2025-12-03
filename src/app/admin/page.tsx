@@ -71,6 +71,7 @@ export default async function AdminDashboard() {
           title="Sản phẩm"
           value={stats.productsCount}
           icon="📦"
+          href="/admin/products"
         />
         <StatCard
           title="Khuyến mãi đang có"

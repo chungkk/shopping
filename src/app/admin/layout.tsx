@@ -44,6 +44,12 @@ export default async function AdminLayout({
           >
             Danh mục
           </Link>
+          <Link
+            href="/admin/products"
+            className="block px-4 py-3 hover:bg-gray-800"
+          >
+            Sản phẩm
+          </Link>
           <hr className="my-4 border-gray-700" />
           <Link
             href="/"

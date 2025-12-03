@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { supermarketId, type = 'deals' } = await request.json();
+    const { supermarketId, type = 'deals', categorySlug } = await request.json();
 
     if (!supermarketId) {
       return NextResponse.json(
@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     const scheduler = new CrawlerScheduler();
     const result = await scheduler.runCrawl(
       supermarket._id as Types.ObjectId,
-      type as CrawlType
+      type as CrawlType,
+      categorySlug
     );
 
     return NextResponse.json({

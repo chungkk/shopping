@@ -2,9 +2,9 @@ import { redirect } from 'next/navigation';
 import connectDB from '@/lib/db/mongodb';
 import Supermarket from '@/lib/db/models/Supermarket';
 import CrawlLog from '@/lib/db/models/CrawlLog';
-import TriggerCrawlButton from '@/components/admin/TriggerCrawlButton';
 import { getAdminSession } from '@/lib/auth/admin';
 import FormattedDate from '@/components/admin/FormattedDate';
+import SupermarketCrawlCard from '@/components/admin/SupermarketCrawlCard';
 
 async function getData() {
   await connectDB();
@@ -38,57 +38,16 @@ export default async function CrawlManagementPage() {
 
         <div className="space-y-4">
           {supermarkets.map((supermarket) => (
-            <div
+            <SupermarketCrawlCard
               key={String(supermarket._id)}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4"
-            >
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{supermarket.name}</h3>
-                <p className="text-sm text-gray-500">
-                  {supermarket.isActive ? (
-                    <span className="text-green-600">● Hoạt động</span>
-                  ) : (
-                    <span className="text-gray-400">○ Không hoạt động</span>
-                  )}
-                </p>
-                {supermarket.lastCrawl && (
-                  <div className="mt-2 text-xs text-gray-500">
-                    <p>
-                      Products:{' '}
-                      {supermarket.lastCrawl.productsAt
-                        ? <FormattedDate date={supermarket.lastCrawl.productsAt} />
-                        : 'Chưa crawl'}
-                    </p>
-                    <p>
-                      Deals:{' '}
-                      {supermarket.lastCrawl.dealsAt
-                        ? <FormattedDate date={supermarket.lastCrawl.dealsAt} />
-                        : 'Chưa crawl'}
-                    </p>
-                    {supermarket.lastCrawl.status === 'failed' && (
-                      <p className="text-red-500">
-                        Lỗi: {supermarket.lastCrawl.errorMessage}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <TriggerCrawlButton
-                  supermarketId={String(supermarket._id)}
-                  supermarketName={supermarket.name}
-                  type="products"
-                  disabled={!supermarket.isActive}
-                />
-                <TriggerCrawlButton
-                  supermarketId={String(supermarket._id)}
-                  supermarketName={supermarket.name}
-                  type="deals"
-                  disabled={!supermarket.isActive}
-                />
-              </div>
-            </div>
+              supermarket={{
+                _id: String(supermarket._id),
+                name: supermarket.name,
+                slug: supermarket.slug,
+                isActive: supermarket.isActive,
+                lastCrawl: supermarket.lastCrawl,
+              }}
+            />
           ))}
 
           {supermarkets.length === 0 && (

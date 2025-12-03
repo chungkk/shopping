@@ -5,6 +5,7 @@ export type UnitType = 'piece' | 'kg' | 'liter' | '100g' | '100ml';
 export interface IProduct extends Document {
   supermarketId: Types.ObjectId;
   categoryId: Types.ObjectId;
+  subCategoryId?: Types.ObjectId;
   externalId: string;
   name: string;
   brand?: string;
@@ -27,6 +28,7 @@ const ProductSchema = new Schema<IProduct>(
   {
     supermarketId: { type: Schema.Types.ObjectId, ref: 'Supermarket', required: true },
     categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
+    subCategoryId: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     externalId: { type: String, required: true },
     name: { type: String, required: true },
     brand: { type: String },
@@ -51,6 +53,7 @@ const ProductSchema = new Schema<IProduct>(
 
 ProductSchema.index({ supermarketId: 1, externalId: 1 }, { unique: true });
 ProductSchema.index({ supermarketId: 1, categoryId: 1 });
+ProductSchema.index({ supermarketId: 1, subCategoryId: 1 });
 ProductSchema.index({ name: 'text', brand: 'text' });
 ProductSchema.index({ isAvailable: 1 });
 
