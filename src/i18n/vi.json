@@ -1,0 +1,98 @@
+{
+  "common": {
+    "appName": "Đi Chợ Thông Minh",
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "retry": "Thử lại",
+    "search": "Tìm kiếm",
+    "filter": "Lọc",
+    "sort": "Sắp xếp",
+    "all": "Tất cả",
+    "close": "Đóng",
+    "viewMore": "Xem thêm",
+    "viewLess": "Thu gọn"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "deals": "Khuyến mãi",
+    "categories": "Danh mục",
+    "supermarkets": "Siêu thị"
+  },
+  "home": {
+    "title": "Khuyến mãi siêu thị Đức hôm nay",
+    "subtitle": "Tổng hợp sản phẩm giảm giá từ các siêu thị lớn",
+    "selectSupermarket": "Chọn siêu thị",
+    "viewDeals": "Xem khuyến mãi"
+  },
+  "deals": {
+    "title": "Khuyến mãi",
+    "todayDeals": "Khuyến mãi hôm nay",
+    "noDeals": "Không có khuyến mãi nào",
+    "noDealsInCategory": "Không có khuyến mãi trong danh mục này",
+    "expired": "Đã hết hạn",
+    "endsIn": "Còn {days} ngày",
+    "endsSoon": "Sắp hết hạn",
+    "discount": "Giảm {percent}%",
+    "originalPrice": "Giá gốc",
+    "currentPrice": "Giá hiện tại",
+    "validFrom": "Có hiệu lực từ",
+    "validUntil": "Đến",
+    "source": "Nguồn",
+    "perUnit": "/ {unit}"
+  },
+  "search": {
+    "placeholder": "Tìm sản phẩm...",
+    "noResults": "Không tìm thấy kết quả",
+    "noResultsHint": "Thử tìm kiếm với từ khóa khác hoặc duyệt theo danh mục",
+    "resultsFor": "Kết quả cho \"{query}\""
+  },
+  "categories": {
+    "all": "Tất cả danh mục",
+    "getraenke": "Đồ uống",
+    "obst-gemuese": "Rau củ quả",
+    "fleisch-fisch": "Thịt & Cá",
+    "tiefkuehl": "Đông lạnh",
+    "molkereiprodukte": "Sữa & Phô mai",
+    "brot-backwaren": "Bánh mì & Bánh ngọt",
+    "suesses-salziges": "Bánh kẹo",
+    "haushalt": "Đồ gia dụng",
+    "drogerie": "Mỹ phẩm & Chăm sóc",
+    "sonstiges": "Khác"
+  },
+  "supermarkets": {
+    "globus": "Globus",
+    "aldi": "Aldi",
+    "lidl": "Lidl",
+    "rewe": "Rewe",
+    "edeka": "Edeka",
+    "penny": "Penny",
+    "netto": "Netto",
+    "kaufland": "Kaufland",
+    "norma": "Norma"
+  },
+  "status": {
+    "lastUpdated": "Cập nhật lần cuối",
+    "staleWarning": "Dữ liệu có thể đã cũ",
+    "updating": "Đang cập nhật...",
+    "upToDate": "Dữ liệu mới nhất"
+  },
+  "pagination": {
+    "previous": "Trước",
+    "next": "Tiếp",
+    "page": "Trang {current} / {total}",
+    "showing": "Hiển thị {from}-{to} trong {total} sản phẩm"
+  },
+  "sort": {
+    "discount": "Giảm giá nhiều nhất",
+    "priceAsc": "Giá thấp đến cao",
+    "priceDesc": "Giá cao đến thấp",
+    "endDate": "Sắp hết hạn",
+    "name": "Tên A-Z"
+  },
+  "errors": {
+    "loadFailed": "Không thể tải dữ liệu",
+    "networkError": "Lỗi kết nối mạng",
+    "serverError": "Lỗi máy chủ",
+    "notFound": "Không tìm thấy"
+  }
+}
