@@ -5,16 +5,19 @@ import Category from '../src/lib/db/models/Category';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/shopping-deals';
 
 const categories = [
-  { name: 'Getränke', nameVi: 'Đồ uống', slug: 'getraenke', sortOrder: 1 },
-  { name: 'Obst & Gemüse', nameVi: 'Rau củ quả', slug: 'obst-gemuese', sortOrder: 2 },
+  { name: 'Obst & Gemüse', nameVi: 'Rau củ quả', slug: 'obst-gemuese', sortOrder: 1 },
+  { name: 'Wurst & Käse', nameVi: 'Xúc xích & Phô mai', slug: 'wurst-kaese', sortOrder: 2 },
   { name: 'Fleisch & Fisch', nameVi: 'Thịt & Cá', slug: 'fleisch-fisch', sortOrder: 3 },
-  { name: 'Tiefkühl', nameVi: 'Đông lạnh', slug: 'tiefkuehl', sortOrder: 4 },
-  { name: 'Molkereiprodukte', nameVi: 'Sữa & Phô mai', slug: 'molkereiprodukte', sortOrder: 5 },
-  { name: 'Brot & Backwaren', nameVi: 'Bánh mì & Bánh ngọt', slug: 'brot-backwaren', sortOrder: 6 },
+  { name: 'Frische Produkte', nameVi: 'Sản phẩm tươi', slug: 'frische-produkte', sortOrder: 4 },
+  { name: 'Tiefkühl', nameVi: 'Đông lạnh', slug: 'tiefkuehl', sortOrder: 5 },
+  { name: 'Vorratsschrank', nameVi: 'Thực phẩm khô', slug: 'vorratsschrank', sortOrder: 6 },
   { name: 'Süßes & Salziges', nameVi: 'Bánh kẹo', slug: 'suesses-salziges', sortOrder: 7 },
-  { name: 'Haushalt', nameVi: 'Đồ gia dụng', slug: 'haushalt', sortOrder: 8 },
-  { name: 'Drogerie', nameVi: 'Mỹ phẩm & Chăm sóc', slug: 'drogerie', sortOrder: 9 },
-  { name: 'Sonstiges', nameVi: 'Khác', slug: 'sonstiges', sortOrder: 10 },
+  { name: 'Getränke', nameVi: 'Đồ uống', slug: 'getraenke', sortOrder: 8 },
+  { name: 'Körperpflege & Kosmetik', nameVi: 'Chăm sóc cơ thể & Mỹ phẩm', slug: 'koerperpflege-kosmetik', sortOrder: 9 },
+  { name: 'Baby & Schwangerschaft', nameVi: 'Mẹ & Bé', slug: 'baby-schwangerschaft', sortOrder: 10 },
+  { name: 'Haushalt', nameVi: 'Đồ gia dụng', slug: 'haushalt', sortOrder: 11 },
+  { name: 'Spiel- & Schreibwaren', nameVi: 'Đồ chơi & Văn phòng phẩm', slug: 'spiel-schreibwaren', sortOrder: 12 },
+  { name: 'Sonstiges', nameVi: 'Khác', slug: 'sonstiges', sortOrder: 99 },
 ];
 
 async function seedCategories() {

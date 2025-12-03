@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { BaseCrawler, CrawlConfig, CrawlResult } from '../base';
-import { parsePriceText, parseUnitPriceText } from '../../utils/price';
+import { parseUnitPriceText } from '../../utils/price';
 
 export interface RawProduct {
   externalId: string;
@@ -22,20 +22,21 @@ interface ProductPageData {
 }
 
 const DEFAULT_SELECTORS = {
-  productCard: '[data-testid="product-card"], .product-card, .product-tile',
-  productName: '[data-testid="product-name"], .product-name, .product-title, h2, h3',
-  productPrice: '[data-testid="product-price"], .product-price, .price',
-  productImage: '[data-testid="product-image"] img, .product-image img, img[src*="produkte"]',
-  productLink: 'a[href*="/produkt/"], a[href*="produkt"]',
-  unitPrice: '.unit-price, .base-price, [data-testid="unit-price"]',
-  pagination: '.pagination, [data-testid="pagination"]',
-  nextPage: '.pagination-next, [data-testid="next-page"], a[rel="next"]',
-  categoryLink: 'nav a[href*="/sortiment/"], .category-nav a',
+  productCard: '.card.product-box',
+  productName: 'a.product-name',
+  productPrice: '.unit-price.js-unit-price',
+  productImage: '.product-image-link img',
+  productLink: 'a.product-image-link',
+  unitPrice: '.product-price-unit',
+  pagination: '.pagination',
+  nextPage: '.pagination .page-next',
+  categoryLink: '.main-navigation-link, .sidebar-navigation a',
 };
 
 export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
   private supermarketId: Types.ObjectId;
   private baseUrl = 'https://produkte.globus.de';
+  private locationSlug = 'halle-dieselstrasse';
 
   constructor(supermarketId: Types.ObjectId, config: Partial<CrawlConfig> = {}) {
     super({
@@ -45,7 +46,11 @@ export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
     this.supermarketId = supermarketId;
   }
 
-  async crawl(): Promise<CrawlResult<RawProduct>> {
+  setLocationSlug(slug: string) {
+    this.locationSlug = slug;
+  }
+
+  async crawl(categorySlug?: string): Promise<CrawlResult<RawProduct>> {
     const result: CrawlResult<RawProduct> = {
       success: false,
       data: [],
@@ -57,7 +62,16 @@ export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
       await this.init();
       const page = await this.createPage();
 
-      const categories = await this.fetchCategories(page);
+      let categories = await this.fetchCategories(page);
+      
+      if (categorySlug) {
+        categories = categories.filter(c => c.slug === categorySlug);
+        if (categories.length === 0) {
+          result.errors.push(`Category "${categorySlug}" not found`);
+          return result;
+        }
+      }
+      
       console.log(`Found ${categories.length} categories to crawl`);
 
       for (const category of categories) {
@@ -90,30 +104,41 @@ export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
   private async fetchCategories(
     page: Awaited<ReturnType<typeof this.createPage>>
   ): Promise<Array<{ name: string; slug: string; url: string }>> {
-    const success = await this.navigateWithRetry(page, this.baseUrl);
+    const locationUrl = `${this.baseUrl}/${this.locationSlug}`;
+    const success = await this.navigateWithRetry(page, locationUrl);
     if (!success) {
       throw new Error('Failed to load main page');
     }
 
-    await this.waitForSelector(page, this.config.selectors.categoryLink);
+    await this.delay(2000);
 
-    const categories = await page.evaluate((selector) => {
-      const links = document.querySelectorAll(selector);
+    const categories = await page.evaluate((locationSlug) => {
+      const links = document.querySelectorAll('.navigation-mega-menu-category-link');
       const cats: Array<{ name: string; slug: string; url: string }> = [];
+      const seen = new Set<string>();
+
+      const excludeSlugs = ['angebote-der-woche', 'mein-globus-rabatte', 'geschenkgutscheine', 'vorbestellservice'];
 
       links.forEach((link) => {
         const href = (link as HTMLAnchorElement).href;
         const name = link.textContent?.trim() || '';
-        if (href && name && href.includes('/sortiment/')) {
-          const slug = href.split('/sortiment/')[1]?.split('/')[0] || '';
-          if (slug) {
-            cats.push({ name, slug, url: href });
+        if (href && name && href.includes(`/${locationSlug}/`)) {
+          const parts = href.split(`/${locationSlug}/`);
+          if (parts[1]) {
+            const pathSegments = parts[1].replace(/\/$/, '').split('/');
+            if (pathSegments.length === 1) {
+              const slug = pathSegments[0];
+              if (slug && !seen.has(slug) && !excludeSlugs.includes(slug)) {
+                seen.add(slug);
+                cats.push({ name, slug, url: href });
+              }
+            }
           }
         }
       });
 
       return cats;
-    }, this.config.selectors.categoryLink);
+    }, this.locationSlug);
 
     return categories;
   }
@@ -124,32 +149,53 @@ export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
   ): Promise<{ products: RawProduct[]; pagesProcessed: number }> {
     const products: RawProduct[] = [];
     let pagesProcessed = 0;
-    let currentUrl = category.url;
 
-    while (currentUrl) {
-      const success = await this.navigateWithRetry(page, currentUrl);
-      if (!success) break;
+    const success = await this.navigateWithRetry(page, category.url);
+    if (!success) return { products, pagesProcessed };
 
-      await this.waitForSelector(page, this.config.selectors.productCard, 5000);
+    await this.delay(1000);
 
-      const pageData = await this.extractProducts(page, category.slug);
-      products.push(...pageData.products);
-      pagesProcessed++;
+    const totalPages = await this.getTotalPages(page);
+    console.log(`  Category "${category.name}" has ${totalPages} pages`);
 
-      if (pageData.hasNextPage) {
-        const nextUrl = await this.getNextPageUrl(page);
-        if (nextUrl && nextUrl !== currentUrl) {
-          currentUrl = nextUrl;
-          await this.delay();
-        } else {
-          break;
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      const pageUrl = pageNum === 1 ? category.url : `${category.url}?p=${pageNum}`;
+      
+      if (pageNum > 1) {
+        const navSuccess = await this.navigateWithRetry(page, pageUrl);
+        if (!navSuccess) {
+          console.log(`  Failed to load page ${pageNum}`);
+          continue;
         }
-      } else {
-        break;
+        await this.delay(500);
       }
+
+      try {
+        await this.waitForSelector(page, this.config.selectors.productCard, 5000);
+        const pageData = await this.extractProducts(page, category.slug);
+        products.push(...pageData.products);
+        pagesProcessed++;
+        console.log(`    Page ${pageNum}/${totalPages}: ${pageData.products.length} products`);
+      } catch (error) {
+        console.log(`  Error on page ${pageNum}: ${error}`);
+      }
+
+      await this.delay(500);
     }
 
     return { products, pagesProcessed };
+  }
+
+  private async getTotalPages(
+    page: Awaited<ReturnType<typeof this.createPage>>
+  ): Promise<number> {
+    return page.evaluate(() => {
+      const lastPageInput = document.querySelector('.page-last input[name="p"]') as HTMLInputElement;
+      if (lastPageInput?.value) {
+        return parseInt(lastPageInput.value, 10);
+      }
+      return 1;
+    });
   }
 
   private async extractProducts(
@@ -164,7 +210,7 @@ export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
           externalId: string;
           name: string;
           imageUrl: string;
-          priceText: string;
+          price: number;
           unitPriceText: string;
           sourceUrl: string;
           categorySlug: string;
@@ -174,27 +220,28 @@ export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
 
         cards.forEach((card, index) => {
           const nameEl = card.querySelector(sel.productName);
-          const priceEl = card.querySelector(sel.productPrice);
+          const priceEl = card.querySelector(sel.productPrice) as HTMLElement;
           const imageEl = card.querySelector(sel.productImage) as HTMLImageElement;
           const linkEl = card.querySelector(sel.productLink) as HTMLAnchorElement;
           const unitPriceEl = card.querySelector(sel.unitPrice);
 
           const name = nameEl?.textContent?.trim() || '';
-          const priceText = priceEl?.textContent?.trim() || '';
+          const priceValue = priceEl?.dataset?.value || priceEl?.getAttribute('data-value') || '0';
+          const price = parseFloat(priceValue) || 0;
           const imageUrl = imageEl?.src || '';
           const sourceUrl = linkEl?.href || window.location.href;
           const unitPriceText = unitPriceEl?.textContent?.trim() || '';
+          const gtin = linkEl?.dataset?.productGtin || linkEl?.getAttribute('data-product-gtin');
 
           const urlParts = sourceUrl.split('/');
-          const externalId =
-            urlParts.find((p) => /^\d+$/.test(p)) || `${catSlug}-${index}`;
+          const externalId = gtin || urlParts.find((p) => /^\d+$/.test(p)) || `${catSlug}-${index}`;
 
-          if (name && priceText) {
+          if (name && price > 0) {
             products.push({
               externalId,
               name,
               imageUrl,
-              priceText,
+              price,
               unitPriceText,
               sourceUrl,
               categorySlug: catSlug,
@@ -211,14 +258,13 @@ export class GlobusProductCrawler extends BaseCrawler<RawProduct> {
     );
 
     const parsedProducts: RawProduct[] = data.products.map((p) => {
-      const basePrice = parsePriceText(p.priceText) || 0;
       const unitPriceData = parseUnitPriceText(p.unitPriceText);
 
       return {
         externalId: p.externalId,
         name: p.name,
         imageUrl: p.imageUrl,
-        basePrice,
+        basePrice: p.price,
         unitType: (unitPriceData?.unitType as RawProduct['unitType']) || 'piece',
         unitPrice: unitPriceData?.unitPrice,
         unitPriceText: p.unitPriceText || undefined,

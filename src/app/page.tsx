@@ -6,7 +6,7 @@ import Deal from '@/lib/db/models/Deal';
 
 async function getSupermarkets() {
   await connectDB();
-  return Supermarket.find({ isActive: true }).select('name slug logo').lean();
+  return Supermarket.find().select('name slug logo isActive').sort({ isActive: -1, name: 1 }).lean();
 }
 
 async function getDealsCount() {
@@ -40,29 +40,51 @@ export default async function Home() {
       <section>
         <h2 className="mb-6 text-2xl font-bold text-gray-900">Chọn siêu thị</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {supermarkets.map((supermarket) => (
-            <Link
-              key={String(supermarket._id)}
-              href={`/deals?supermarket=${supermarket.slug}`}
-              className="flex flex-col items-center gap-3 rounded-lg border bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-            >
-              {supermarket.logo ? (
-                <Image
-                  src={supermarket.logo}
-                  alt={supermarket.name}
-                  width={120}
-                  height={48}
-                  className="h-12 w-auto object-contain"
-                  unoptimized
-                />
-              ) : (
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-600">
-                  {supermarket.name[0]}
-                </div>
-              )}
-              <span className="text-lg font-medium text-gray-900">{supermarket.name}</span>
-            </Link>
-          ))}
+          {supermarkets.map((supermarket) => {
+            const isActive = supermarket.isActive;
+            const cardContent = (
+              <>
+                {!isActive && (
+                  <span className="absolute top-2 right-2 rounded bg-gray-200 px-2 py-0.5 text-xs text-gray-600">
+                    Sắp ra mắt
+                  </span>
+                )}
+                {supermarket.logo ? (
+                  <Image
+                    src={supermarket.logo}
+                    alt={supermarket.name}
+                    width={120}
+                    height={48}
+                    className="h-12 w-auto object-contain"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-600">
+                    {supermarket.name[0]}
+                  </div>
+                )}
+                <span className="text-lg font-medium text-gray-900">{supermarket.name}</span>
+              </>
+            );
+            
+            const cardClass = `relative flex flex-col items-center gap-3 rounded-lg border bg-white p-6 shadow-sm transition-shadow ${
+              isActive ? 'hover:shadow-md cursor-pointer' : 'opacity-60 cursor-default'
+            }`;
+
+            return isActive ? (
+              <Link
+                key={String(supermarket._id)}
+                href={`/deals?supermarket=${supermarket.slug}`}
+                className={cardClass}
+              >
+                {cardContent}
+              </Link>
+            ) : (
+              <div key={String(supermarket._id)} className={cardClass}>
+                {cardContent}
+              </div>
+            );
+          })}
 
           {supermarkets.length === 0 && (
             <div className="col-span-full py-8 text-center text-gray-500">

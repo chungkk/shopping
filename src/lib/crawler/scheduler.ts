@@ -32,7 +32,8 @@ export class CrawlerScheduler {
 
   async runCrawl(
     supermarketId: Types.ObjectId,
-    type: CrawlType
+    type: CrawlType,
+    categorySlug?: string
   ): Promise<{ success: boolean; message: string }> {
     const crawlKey = `${supermarketId.toString()}-${type}`;
 
@@ -71,7 +72,7 @@ export class CrawlerScheduler {
       try {
         const result =
           type === 'products'
-            ? await this.crawlProducts(supermarket)
+            ? await this.crawlProducts(supermarket, categorySlug)
             : await this.crawlDeals(supermarket);
 
         crawlLog.status = result.success ? 'success' : 'failed';
@@ -130,7 +131,7 @@ export class CrawlerScheduler {
     }
   }
 
-  private async crawlProducts(supermarket: ISupermarket): Promise<{
+  private async crawlProducts(supermarket: ISupermarket, categorySlug?: string): Promise<{
     success: boolean;
     pagesProcessed: number;
     itemsFound: number;
@@ -143,7 +144,7 @@ export class CrawlerScheduler {
       supermarket.crawlConfig
     );
 
-    const result = await crawler.crawl();
+    const result = await crawler.crawl(categorySlug);
 
     let itemsCreated = 0;
     let itemsUpdated = 0;
@@ -299,9 +300,10 @@ export class CrawlerScheduler {
   async runWithRetry(
     supermarketId: Types.ObjectId,
     type: CrawlType,
-    attempt: number = 1
+    attempt: number = 1,
+    categorySlug?: string
   ): Promise<{ success: boolean; message: string }> {
-    const result = await this.runCrawl(supermarketId, type);
+    const result = await this.runCrawl(supermarketId, type, categorySlug);
 
     if (!result.success && attempt < this.config.maxRetries) {
       console.log(
@@ -311,7 +313,7 @@ export class CrawlerScheduler {
       );
 
       await new Promise((resolve) => setTimeout(resolve, this.config.retryIntervalMs));
-      return this.runWithRetry(supermarketId, type, attempt + 1);
+      return this.runWithRetry(supermarketId, type, attempt + 1, categorySlug);
     }
 
     return result;

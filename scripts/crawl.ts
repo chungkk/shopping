@@ -10,6 +10,7 @@ async function main() {
 
   const typeArg = args.find((a) => a.startsWith('--type='));
   const slugArg = args.find((a) => a.startsWith('--supermarket='));
+  const categoryArg = args.find((a) => a.startsWith('--category='));
   const allFlag = args.includes('--all');
   const helpFlag = args.includes('--help') || args.includes('-h');
 
@@ -20,11 +21,13 @@ Usage: npx ts-node scripts/crawl.ts [options]
 Options:
   --type=<products|deals>   Type of crawl (default: deals)
   --supermarket=<slug>      Supermarket slug to crawl (e.g., globus)
+  --category=<slug>         Category slug to crawl (e.g., obst-gemuese)
   --all                     Crawl all active supermarkets
   --help, -h                Show this help message
 
 Examples:
   npx ts-node scripts/crawl.ts --type=deals --supermarket=globus
+  npx ts-node scripts/crawl.ts --type=products --supermarket=globus --category=obst-gemuese
   npx ts-node scripts/crawl.ts --type=products --all
   npx ts-node scripts/crawl.ts --all
 `);
@@ -33,6 +36,7 @@ Examples:
 
   const type: CrawlType = (typeArg?.split('=')[1] as CrawlType) || 'deals';
   const supermarketSlug = slugArg?.split('=')[1];
+  const categorySlug = categoryArg?.split('=')[1];
 
   if (!['products', 'deals'].includes(type)) {
     console.error('Error: Invalid type. Use "products" or "deals".');
@@ -86,7 +90,9 @@ Examples:
     try {
       const result = await scheduler.runWithRetry(
         supermarket._id as Types.ObjectId,
-        type
+        type,
+        1,
+        categorySlug
       );
 
       if (result.success) {

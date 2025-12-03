@@ -1,82 +1,78 @@
 #!/usr/bin/env npx ts-node
 
-import connectDB from '../src/lib/db/mongodb';
+import mongoose from 'mongoose';
 import Supermarket from '../src/lib/db/models/Supermarket';
 import Category from '../src/lib/db/models/Category';
 import Deal from '../src/lib/db/models/Deal';
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/shopping-deals';
 
 const sampleDeals = [
   {
     productName: 'Barilla Spaghetti No.5',
     productBrand: 'Barilla',
-    categorySlug: 'lebensmittel',
+    categorySlug: 'sonstiges',
     currentPrice: 129,
     originalPrice: 179,
-    discountPercent: 28,
-    unitType: '500g',
+    unitType: 'piece',
     priceText: '1,29 €',
     originalPriceText: '1,79 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/barilla-spaghetti.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Spaghetti',
   },
   {
-    productName: 'Coca-Cola Classic',
+    productName: 'Coca-Cola Classic 1.5L',
     productBrand: 'Coca-Cola',
     categorySlug: 'getraenke',
     currentPrice: 99,
     originalPrice: 149,
-    discountPercent: 34,
-    unitType: '1.5L',
+    unitType: 'liter',
     priceText: '0,99 €',
     originalPriceText: '1,49 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/coca-cola.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Coca-Cola',
   },
   {
     productName: 'Milka Alpenmilch Schokolade',
     productBrand: 'Milka',
-    categorySlug: 'suessigkeiten',
+    categorySlug: 'suesses-salziges',
     currentPrice: 89,
     originalPrice: 119,
-    discountPercent: 25,
     unitType: '100g',
     priceText: '0,89 €',
     originalPriceText: '1,19 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/milka.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Milka',
   },
   {
     productName: 'Rinderhackfleisch',
     productBrand: 'Metzgerei Globus',
-    categorySlug: 'fleisch',
+    categorySlug: 'fleisch-fisch',
     currentPrice: 499,
     originalPrice: 699,
-    discountPercent: 29,
-    unitType: '500g',
+    unitType: 'kg',
     priceText: '4,99 €',
     originalPriceText: '6,99 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/hackfleisch.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Hackfleisch',
   },
   {
     productName: 'Bio Vollmilch 3.8%',
     productBrand: 'Weihenstephan',
-    categorySlug: 'milchprodukte',
+    categorySlug: 'molkereiprodukte',
     currentPrice: 149,
     originalPrice: 179,
-    discountPercent: 17,
-    unitType: '1L',
+    unitType: 'liter',
     priceText: '1,49 €',
     originalPriceText: '1,79 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/milch.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Milch',
   },
   {
     productName: 'Frische Brötchen',
     productBrand: 'Globus Bäckerei',
-    categorySlug: 'backwaren',
+    categorySlug: 'brot-backwaren',
     currentPrice: 39,
     originalPrice: 49,
-    discountPercent: 20,
-    unitType: 'Stück',
+    unitType: 'piece',
     priceText: '0,39 €',
     originalPriceText: '0,49 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/broetchen.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Broetchen',
   },
   {
     productName: 'Tiefkühl Pizza Margherita',
@@ -84,11 +80,10 @@ const sampleDeals = [
     categorySlug: 'tiefkuehl',
     currentPrice: 199,
     originalPrice: 299,
-    discountPercent: 33,
-    unitType: '320g',
+    unitType: 'piece',
     priceText: '1,99 €',
     originalPriceText: '2,99 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/pizza.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Pizza',
   },
   {
     productName: 'Bio Äpfel',
@@ -96,11 +91,10 @@ const sampleDeals = [
     categorySlug: 'obst-gemuese',
     currentPrice: 199,
     originalPrice: 299,
-    discountPercent: 33,
-    unitType: '1kg',
+    unitType: 'kg',
     priceText: '1,99 €',
     originalPriceText: '2,99 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/aepfel.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Aepfel',
   },
   {
     productName: 'Persil Waschmittel',
@@ -108,11 +102,10 @@ const sampleDeals = [
     categorySlug: 'haushalt',
     currentPrice: 899,
     originalPrice: 1299,
-    discountPercent: 31,
-    unitType: '1.8L',
+    unitType: 'liter',
     priceText: '8,99 €',
     originalPriceText: '12,99 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/persil.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Persil',
   },
   {
     productName: 'Pampers Baby-Dry',
@@ -120,17 +113,17 @@ const sampleDeals = [
     categorySlug: 'drogerie',
     currentPrice: 1499,
     originalPrice: 1999,
-    discountPercent: 25,
-    unitType: '60 Stück',
+    unitType: 'piece',
     priceText: '14,99 €',
     originalPriceText: '19,99 €',
-    productImageUrl: 'https://produkte.globus.de/media/images/product/pampers.jpg',
+    productImageUrl: 'https://via.placeholder.com/300x300?text=Pampers',
   },
 ];
 
 async function main() {
   console.log('Connecting to database...');
-  await connectDB();
+  await mongoose.connect(MONGODB_URI);
+  console.log('Connected to MongoDB');
 
   const supermarket = await Supermarket.findOne({ slug: 'globus' });
   if (!supermarket) {
@@ -184,23 +177,24 @@ async function main() {
       productImageUrl: deal.productImageUrl,
       currentPrice: deal.currentPrice,
       originalPrice: deal.originalPrice,
-      discountPercent: deal.discountPercent,
       unitType: deal.unitType,
       priceText: deal.priceText,
       originalPriceText: deal.originalPriceText,
       startDate,
       endDate,
       isActive: true,
-      source: 'demo',
+      source: 'website',
       sourceRef: `KW${calendarWeek} Demo`,
       sourceUrl: 'https://www.globus.de/angebote',
     });
 
     created++;
-    console.log(`  + ${deal.productName} (-${deal.discountPercent}%)`);
+    const discount = deal.originalPrice ? Math.round(((deal.originalPrice - deal.currentPrice) / deal.originalPrice) * 100) : 0;
+    console.log(`  + ${deal.productName} (-${discount}%)`);
   }
 
   console.log(`\nDone: ${created} deals created, ${skipped} skipped`);
+  await mongoose.disconnect();
   process.exit(0);
 }
 

@@ -3,69 +3,131 @@ import Supermarket from '../src/lib/db/models/Supermarket';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/shopping-deals';
 
-const globusData = {
-  name: 'Globus',
-  slug: 'globus',
-  logo: 'https://www.globus.de/static/images/logo.svg',
-  website: 'https://www.globus.de',
-  productCatalogUrl: 'https://produkte.globus.de',
-  flyerUrl: 'https://www.globus.de/de/standorte/halle-dieselstrasse/aktuelles-prospekt.php',
-  locations: [
-    {
-      name: 'Halle-Dieselstraße',
-      slug: 'halle-dieselstrasse',
-      address: 'Dieselstraße 8, 06112 Halle (Saale)',
-      flyerUrl: 'https://www.globus.de/de/standorte/halle-dieselstrasse/aktuelles-prospekt.php',
+const supermarkets = [
+  {
+    name: 'Globus',
+    slug: 'globus',
+    logo: 'https://www.globus.de/resource/blob/16932/53a1c76db73ce8b8ebeeef9cf89a24e2/globus-logo-data.png',
+    website: 'https://www.globus.de',
+    productCatalogUrl: 'https://produkte.globus.de',
+    flyerUrl: 'https://www.globus.de/de/standorte/halle-dieselstrasse/aktuelles-prospekt.php',
+    locations: [
+      {
+        name: 'Halle-Dieselstraße',
+        slug: 'halle-dieselstrasse',
+        address: 'Dieselstraße 8, 06112 Halle (Saale)',
+        flyerUrl: 'https://www.globus.de/de/standorte/halle-dieselstrasse/aktuelles-prospekt.php',
+      },
+    ],
+    isActive: true,
+    crawlConfig: {
+      delayMs: 3000,
+      userAgent: 'ShoppingDeals Bot/1.0',
+      selectors: {
+        productCard: '.product-card',
+        productName: '.product-name',
+        productPrice: '.product-price',
+        productImage: '.product-image img',
+        dealCard: '.deal-card',
+        dealName: '.deal-name',
+        dealPrice: '.deal-price',
+      },
     },
-  ],
-  isActive: true,
-  crawlConfig: {
-    delayMs: 3000,
-    userAgent: 'ShoppingDeals Bot/1.0 (+https://shopping-deals.app)',
-    selectors: {
-      productCard: '[data-testid="product-card"], .product-card, .product-tile',
-      productName: '[data-testid="product-name"], .product-name, .product-title, h2, h3',
-      productPrice: '[data-testid="product-price"], .product-price, .price',
-      productImage: '[data-testid="product-image"] img, .product-image img',
-      dealCard: '[data-testid="deal-card"], .deal-card, .offer-card, .flyer-item',
-      dealName: '[data-testid="deal-name"], .deal-name, .offer-title',
-      dealPrice: '[data-testid="deal-price"], .deal-price, .offer-price',
-    },
+    lastCrawl: { status: 'pending' as const },
   },
-  lastCrawl: {
-    productsAt: null,
-    dealsAt: null,
-    status: 'pending' as const,
+  {
+    name: 'Aldi Süd',
+    slug: 'aldi-sued',
+    logo: 'https://www.aldi-sued.de/etc.clientlibs/aldi-sued/clientlibs/clientlib-uikit/resources/favicons/android-chrome-192x192.png',
+    website: 'https://www.aldi-sued.de',
+    isActive: false,
+    crawlConfig: { delayMs: 3000, userAgent: 'ShoppingDeals Bot/1.0', selectors: {} },
+    lastCrawl: { status: 'pending' as const },
   },
-};
+  {
+    name: 'Lidl',
+    slug: 'lidl',
+    logo: 'https://www.lidl.de/assets/favicons/android-chrome-192x192.png',
+    website: 'https://www.lidl.de',
+    isActive: false,
+    crawlConfig: { delayMs: 3000, userAgent: 'ShoppingDeals Bot/1.0', selectors: {} },
+    lastCrawl: { status: 'pending' as const },
+  },
+  {
+    name: 'Rewe',
+    slug: 'rewe',
+    logo: 'https://www.rewe.de/assets/favicons/android-chrome-192x192.png',
+    website: 'https://www.rewe.de',
+    isActive: false,
+    crawlConfig: { delayMs: 3000, userAgent: 'ShoppingDeals Bot/1.0', selectors: {} },
+    lastCrawl: { status: 'pending' as const },
+  },
+  {
+    name: 'Edeka',
+    slug: 'edeka',
+    logo: 'https://www.edeka.de/etc.clientlibs/edeka/clientlibs/clientlib-base/resources/img/favicons/android-chrome-192x192.png',
+    website: 'https://www.edeka.de',
+    isActive: false,
+    crawlConfig: { delayMs: 3000, userAgent: 'ShoppingDeals Bot/1.0', selectors: {} },
+    lastCrawl: { status: 'pending' as const },
+  },
+  {
+    name: 'Kaufland',
+    slug: 'kaufland',
+    logo: 'https://www.kaufland.de/apple-touch-icon.png',
+    website: 'https://www.kaufland.de',
+    isActive: false,
+    crawlConfig: { delayMs: 3000, userAgent: 'ShoppingDeals Bot/1.0', selectors: {} },
+    lastCrawl: { status: 'pending' as const },
+  },
+  {
+    name: 'Penny',
+    slug: 'penny',
+    logo: 'https://www.penny.de/assets/favicons/android-chrome-192x192.png',
+    website: 'https://www.penny.de',
+    isActive: false,
+    crawlConfig: { delayMs: 3000, userAgent: 'ShoppingDeals Bot/1.0', selectors: {} },
+    lastCrawl: { status: 'pending' as const },
+  },
+  {
+    name: 'Netto',
+    slug: 'netto',
+    logo: 'https://www.netto-online.de/favicon-192x192.png',
+    website: 'https://www.netto-online.de',
+    isActive: false,
+    crawlConfig: { delayMs: 3000, userAgent: 'ShoppingDeals Bot/1.0', selectors: {} },
+    lastCrawl: { status: 'pending' as const },
+  },
+];
 
-async function seedSupermarket() {
+async function seedSupermarkets() {
   try {
     console.log('Connecting to MongoDB...');
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    const existing = await Supermarket.findOne({ slug: globusData.slug });
+    for (const data of supermarkets) {
+      const existing = await Supermarket.findOne({ slug: data.slug });
 
-    if (existing) {
-      console.log('Globus supermarket already exists, updating...');
-      await Supermarket.updateOne({ slug: globusData.slug }, { $set: globusData });
-      console.log('Globus supermarket updated');
-    } else {
-      console.log('Creating Globus supermarket...');
-      await Supermarket.create(globusData);
-      console.log('Globus supermarket created');
+      if (existing) {
+        console.log(`${data.name} already exists, updating...`);
+        await Supermarket.updateOne({ slug: data.slug }, { $set: data });
+      } else {
+        console.log(`Creating ${data.name}...`);
+        await Supermarket.create(data);
+      }
     }
 
-    const supermarket = await Supermarket.findOne({ slug: globusData.slug });
-    console.log('Supermarket ID:', supermarket?._id);
+    console.log(`\nSeeded ${supermarkets.length} supermarkets`);
+    console.log('Active: Globus');
+    console.log('Inactive: Aldi Süd, Lidl, Rewe, Edeka, Kaufland, Penny, Netto');
   } catch (error) {
-    console.error('Error seeding supermarket:', error);
+    console.error('Error seeding supermarkets:', error);
     process.exit(1);
   } finally {
     await mongoose.disconnect();
-    console.log('Disconnected from MongoDB');
+    console.log('\nDisconnected from MongoDB');
   }
 }
 
-seedSupermarket();
+seedSupermarkets();
