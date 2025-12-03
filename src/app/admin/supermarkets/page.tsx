@@ -1,7 +1,10 @@
+import { redirect } from 'next/navigation';
 import connectDB from '@/lib/db/mongodb';
 import Supermarket from '@/lib/db/models/Supermarket';
 import Deal from '@/lib/db/models/Deal';
 import Product from '@/lib/db/models/Product';
+import { getAdminSession } from '@/lib/auth/admin';
+import FormattedDate from '@/components/admin/FormattedDate';
 
 async function getSupermarkets() {
   await connectDB();
@@ -22,6 +25,11 @@ async function getSupermarkets() {
 }
 
 export default async function SupermarketsPage() {
+  const isAuthenticated = await getAdminSession();
+  if (!isAuthenticated) {
+    redirect('/admin/login');
+  }
+
   const supermarkets = await getSupermarkets();
 
   return (
@@ -62,7 +70,7 @@ export default async function SupermarketsPage() {
                 <td className="p-4">{supermarket.dealsCount.toLocaleString()}</td>
                 <td className="p-4 text-sm text-gray-500">
                   {supermarket.lastCrawl?.dealsAt
-                    ? new Date(supermarket.lastCrawl.dealsAt).toLocaleString('vi-VN')
+                    ? <FormattedDate date={supermarket.lastCrawl.dealsAt} />
                     : 'Chưa crawl'}
                 </td>
               </tr>

@@ -1,7 +1,10 @@
+import { redirect } from 'next/navigation';
 import connectDB from '@/lib/db/mongodb';
 import Supermarket from '@/lib/db/models/Supermarket';
 import CrawlLog from '@/lib/db/models/CrawlLog';
 import TriggerCrawlButton from '@/components/admin/TriggerCrawlButton';
+import { getAdminSession } from '@/lib/auth/admin';
+import FormattedDate from '@/components/admin/FormattedDate';
 
 async function getData() {
   await connectDB();
@@ -19,6 +22,11 @@ async function getData() {
 }
 
 export default async function CrawlManagementPage() {
+  const isAuthenticated = await getAdminSession();
+  if (!isAuthenticated) {
+    redirect('/admin/login');
+  }
+
   const { supermarkets, crawlLogs } = await getData();
 
   return (
@@ -48,13 +56,13 @@ export default async function CrawlManagementPage() {
                     <p>
                       Products:{' '}
                       {supermarket.lastCrawl.productsAt
-                        ? new Date(supermarket.lastCrawl.productsAt).toLocaleString('vi-VN')
+                        ? <FormattedDate date={supermarket.lastCrawl.productsAt} />
                         : 'Chưa crawl'}
                     </p>
                     <p>
                       Deals:{' '}
                       {supermarket.lastCrawl.dealsAt
-                        ? new Date(supermarket.lastCrawl.dealsAt).toLocaleString('vi-VN')
+                        ? <FormattedDate date={supermarket.lastCrawl.dealsAt} />
                         : 'Chưa crawl'}
                     </p>
                     {supermarket.lastCrawl.status === 'failed' && (
@@ -104,7 +112,6 @@ export default async function CrawlManagementPage() {
                   <th className="pb-3">Trạng thái</th>
                   <th className="pb-3">Bắt đầu</th>
                   <th className="pb-3">Thời lượng</th>
-                  <th className="pb-3">Trang</th>
                   <th className="pb-3">Tìm thấy</th>
                   <th className="pb-3">Tạo mới</th>
                   <th className="pb-3">Cập nhật</th>
@@ -115,7 +122,7 @@ export default async function CrawlManagementPage() {
                 {crawlLogs.map((log) => (
                   <tr key={String(log._id)} className="border-b">
                     <td className="py-3">
-                      {(log.supermarketId as { name: string })?.name || 'N/A'}
+                      {(log.supermarketId as unknown as { name: string })?.name || 'N/A'}
                     </td>
                     <td className="py-3">
                       <span className={`rounded px-2 py-1 text-xs ${
@@ -128,12 +135,11 @@ export default async function CrawlManagementPage() {
                       <StatusBadge status={log.status} />
                     </td>
                     <td className="py-3 text-sm">
-                      {new Date(log.startedAt).toLocaleString('vi-VN')}
+                      <FormattedDate date={log.startedAt} />
                     </td>
                     <td className="py-3 text-sm">
                       {log.duration ? `${(log.duration / 1000).toFixed(1)}s` : '-'}
                     </td>
-                    <td className="py-3 text-sm">{log.stats?.pagesProcessed || 0}</td>
                     <td className="py-3 text-sm">{log.stats?.itemsFound || 0}</td>
                     <td className="py-3 text-sm text-green-600">{log.stats?.itemsCreated || 0}</td>
                     <td className="py-3 text-sm text-blue-600">{log.stats?.itemsUpdated || 0}</td>

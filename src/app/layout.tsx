@@ -50,8 +50,8 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50`}>
+    <html lang={locale} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans antialiased bg-gray-50`} suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <header className="sticky top-0 z-50 border-b bg-white shadow-sm">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import connectDB from '@/lib/db/mongodb';
 import Supermarket from '@/lib/db/models/Supermarket';
 import Category from '@/lib/db/models/Category';
@@ -5,6 +6,8 @@ import Product from '@/lib/db/models/Product';
 import Deal from '@/lib/db/models/Deal';
 import CrawlLog from '@/lib/db/models/CrawlLog';
 import Link from 'next/link';
+import { getAdminSession } from '@/lib/auth/admin';
+import FormattedDate from '@/components/admin/FormattedDate';
 
 async function getStats() {
   await connectDB();
@@ -40,6 +43,11 @@ async function getStats() {
 }
 
 export default async function AdminDashboard() {
+  const isAuthenticated = await getAdminSession();
+  if (!isAuthenticated) {
+    redirect('/admin/login');
+  }
+
   const stats = await getStats();
 
   return (
@@ -98,7 +106,7 @@ export default async function AdminDashboard() {
               {stats.recentCrawls.map((crawl) => (
                 <tr key={String(crawl._id)} className="border-b">
                   <td className="py-3">
-                    {(crawl.supermarketId as { name: string })?.name || 'N/A'}
+                    {(crawl.supermarketId as unknown as { name: string })?.name || 'N/A'}
                   </td>
                   <td className="py-3">
                     <span className={`rounded px-2 py-1 text-xs ${
@@ -111,7 +119,7 @@ export default async function AdminDashboard() {
                     <StatusBadge status={crawl.status} />
                   </td>
                   <td className="py-3 text-sm text-gray-500">
-                    {new Date(crawl.startedAt).toLocaleString('vi-VN')}
+                    <FormattedDate date={crawl.startedAt} />
                   </td>
                   <td className="py-3 text-sm">
                     {crawl.stats && (

@@ -1,6 +1,8 @@
+import { redirect } from 'next/navigation';
 import connectDB from '@/lib/db/mongodb';
 import Category from '@/lib/db/models/Category';
 import Deal from '@/lib/db/models/Deal';
+import { getAdminSession } from '@/lib/auth/admin';
 
 async function getCategories() {
   await connectDB();
@@ -24,6 +26,11 @@ async function getCategories() {
 }
 
 export default async function CategoriesPage() {
+  const isAuthenticated = await getAdminSession();
+  if (!isAuthenticated) {
+    redirect('/admin/login');
+  }
+
   const categories = await getCategories();
 
   return (
@@ -52,7 +59,7 @@ export default async function CategoriesPage() {
                 <td className="p-4">{category.nameVi}</td>
                 <td className="p-4 text-gray-500">{category.slug}</td>
                 <td className="p-4">
-                  {(category.supermarketId as { name: string })?.name || 'N/A'}
+                  {(category.supermarketId as unknown as { name: string })?.name || 'N/A'}
                 </td>
                 <td className="p-4">{category.dealsCount}</td>
               </tr>

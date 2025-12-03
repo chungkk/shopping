@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAdminSession } from '@/lib/auth/admin';
 import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
@@ -11,7 +10,7 @@ export default async function AdminLayout({
   const isAuthenticated = await getAdminSession();
 
   if (!isAuthenticated) {
-    redirect('/admin/login');
+    return <>{children}</>;
   }
 
   return (
